@@ -1,4 +1,4 @@
-emiABI: [
+const emiABI = [
     {
       "anonymous": false,
       "inputs": [

@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import poolABI from "../constants/poolABI";
-import { web3Instance } from "../constants/constants";
+import { web3Instance } from "../constants/constant";
 import { getPrice } from "../constants/usdPrice";
 
 let instance;

@@ -15,18 +15,12 @@ const Navbar = () => {
       <Nav>
         <Bars />
         <NavMenu>
-          <NavLink to="/home">Home</NavLink>
-          <NavLink to="/events" activeStyle>
-            Events
+          <NavLink to="/">Home</NavLink>
+          <NavLink to="/interests">
+            Buy
           </NavLink>
-          <NavLink to="/annual" activeStyle>
-            Annual Report
-          </NavLink>
-          <NavLink to="/team" activeStyle>
-            Teams
-          </NavLink>
-          <NavLink to="/blogs" activeStyle>
-            Blogs
+          <NavLink to="/seller">
+            Seller
           </NavLink>
         </NavMenu>
         <div

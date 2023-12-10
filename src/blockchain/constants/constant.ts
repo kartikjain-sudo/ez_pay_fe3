@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import emiABI from './emiABI';
+import emiABI from './emiABI.js';
 
 export const web3Instance = new Web3(
     Web3.givenProvider || "https://endpoints.omniatech.io/v1/matic/mumbai/public"

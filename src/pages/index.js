@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import getRequestDetails from "../blockchain/emi/emiLogic";
+// import fetchGraphqlData from '../blockchain/emi/fetchLoanRequest';
+import BigNumber from 'bignumber';
+import axios from 'axios';
+import { hexToBigInt } from 'viem';
 
 // Modal component
-const Modal = ({ isOpen, onClose, fileName, location }) => {
+const Modal = ({ isOpen, onClose, requester, blockTimestamp }) => {
   if (!isOpen) return null;
 
   return (
@@ -25,28 +30,81 @@ const Modal = ({ isOpen, onClose, fileName, location }) => {
           borderRadius: '8px',
         }}
       >
-        <h3>File Details</h3>
-        <p>File Name: {fileName}</p>
-        <p>Location: {location}</p>
+        <h3>Request Details</h3>
+        <p>Requester Address: {requester}</p>
+        <p>blockTimestamp: {blockTimestamp}</p>
         <button onClick={onClose}>Close</button>
       </div>
     </div>
   );
 };
 
+const fetchGraphqlData = async () => {
+
+  const graphqlEndpoint = 'https://api.thegraph.com/subgraphs/name/kartikjain-sudo/ez-pay';
+  
+    const query = `
+      query {
+        loanRequesteds {
+          id
+          blockNumber
+          blockTimestamp
+          borrower
+          requester
+          transactionHash
+        }
+      }
+    `;
+  
+    try {
+      const response = await axios.post(graphqlEndpoint, { query });
+
+      return response.data.data;
+    } catch (error) {
+      console.error('Error:', error.message);
+      throw error;
+    }
+  };
+
+  const borrowerList = [];
+  const lenderList = [];
+  const dataCheck = {};
+
 const Home = () => {
+  const [data, setData] = useState(null);
+  // const [requestData, setRequestData] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState({ fileName: '', location: '' });
+  const [selectedFile, setSelectedFile] = useState({ requester: '', blockTimestamp: '' });
 
-  const items = [
-    { fileName: 'File 1', location: 'Location 1' },
-    { fileName: 'File 2', location: 'Location 2' },
-    { fileName: 'File 3', location: 'Location 3' },
-    // Add more items as needed
-  ];
+  const requesters = async () => {
+    try {
+      const fetchedData = await fetchGraphqlData();
+      for (let i=0; i<fetchedData.loanRequesteds.length; i++) {
+        if (dataCheck[hexToBigInt(fetchedData.loanRequesteds[i].id)] == 1) {
+          continue
+        }
+        fetchedData.loanRequesteds[i].id = hexToBigInt(fetchedData.loanRequesteds[i].id)
+        if (fetchedData.loanRequesteds[i].borrower) {
+          borrowerList.push(fetchedData.loanRequesteds[i]);
+        } else {
+          lenderList.push(fetchedData.loanRequesteds[i])
+        }
+        dataCheck[hexToBigInt(fetchedData.loanRequesteds[i].id)] = 1;
+      }
 
-  const handleFileClick = (fileName, location) => {
-    setSelectedFile({ fileName, location });
+      setData(fetchedData.loanRequesteds); // Update the state with the fetched data
+    } catch (error) {
+      // Handle error if needed
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
+    requesters()
+  }, []);
+
+  const handleFileClick = (requester, id) => {
+    setSelectedFile({ requester, id });
     setModalOpen(true);
   };
 
@@ -59,14 +117,14 @@ const Home = () => {
         height: '100vh',
       }}
     >
-      {/* Bid Box */}
+      
       <div
         style={{
           border: '1px solid #ccc',
           padding: '20px',
           marginRight: '10px',
-          width: '50%', // Set the width as needed
-          height: '80vh', // Set the height as needed
+          width: '50%',
+          height: '80vh',
           overflow: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -74,25 +132,25 @@ const Home = () => {
           justifyContent: 'flex-start',
         }}
       >
-        {/* Dynamically generate rectangles based on items */}
-        {items.map((item, index) => (
+        <p> Buyers </p>
+        {borrowerList.map((item, index) => (
           <div
             key={index}
             style={{
-              background: '#f0f0f0',
+              background: '#90EE90',
               padding: '10px',
               cursor: 'pointer',
               minWidth: '100px',
               margin: '5px',
             }}
-            onClick={() => handleFileClick(item.fileName, item.location)}
+            onClick={() => handleFileClick(item.requester, item.id)}
           >
-            {item.fileName}
+            {item.requester}
           </div>
         ))}
       </div>
 
-      {/* Ask Box */}
+      
       <div
         style={{
           border: '1px solid #ccc',
@@ -106,20 +164,20 @@ const Home = () => {
           justifyContent: 'flex-start',
         }}
       >
-        {/* Dynamically generate rectangles based on items */}
-        {items.map((item, index) => (
+        <p>Sellers</p>
+        {lenderList.map((item, index) => (
           <div
             key={index}
             style={{
-              background: '#f0f0f0',
+              background: '#FF7F7F',
               padding: '10px',
               cursor: 'pointer',
               minWidth: '100px',
               margin: '5px',
             }}
-            onClick={() => handleFileClick(item.fileName, item.location)}
+            onClick={() => handleFileClick(item.requester, item.blockTimestamp)}
           >
-            {item.fileName}
+            {item.requester}
           </div>
         ))}
       </div>
@@ -128,8 +186,8 @@ const Home = () => {
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        fileName={selectedFile.fileName}
-        location={selectedFile.location}
+        requester={selectedFile.requester}
+        blockTimestamp={selectedFile.blockTimestamp}
       />
     </div>
   );

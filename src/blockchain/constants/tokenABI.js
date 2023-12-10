@@ -1,4 +1,4 @@
-tokenABI: [
+const tokenABI = [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",

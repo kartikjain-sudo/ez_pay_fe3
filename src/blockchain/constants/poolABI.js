@@ -1,4 +1,4 @@
-poolABI: [
+const poolABI = [
     {
         "inputs": [],
         "payable": false,
